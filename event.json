@@ -27,7 +27,7 @@
                     "arn": "arn:aws:s3:::page-scrape-data"
                 },
                 "object": {
-                    "key": "service-terms/service-terms.new",
+                    "key": "service-terms.new",
                     "size": 2156528,
                     "eTag": "199efd53d3f0899126b83545359ccd42",
                     "versionId": "VlzCE.6mwcMGbIMYbkUTY7ck3JeH.nZv",

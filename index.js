@@ -18,6 +18,8 @@ var currentVersionFileContents = "";
 
 exports.handler = function(event, context, callback){
   
+  changes = [];
+  
   console.log(JSON.stringify(event));
   console.log(context)
 

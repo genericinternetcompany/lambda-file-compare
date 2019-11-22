@@ -1,11 +1,13 @@
 'use strict';
-require('colors');
 
-var AWS = require('aws-sdk');
 var jsdiff = require('diff');
+var AWS = require('aws-sdk');
+AWS.config.update({ region: 'us-east-1' });
+
 
 var s3 = new AWS.S3({apiVersion: '2006-03-01'});
-AWS.config.update({ region: 'us-east-1' });
+var sns = new AWS.SNS({apiVersion: '2010-03-31'});
+
 
 var changes = [];
 var bucketName = "";
@@ -15,17 +17,26 @@ var currentVersionFileKey = "";
 var currentVersionFileContents = "";
 
 exports.handler = function(event, context, callback){
+  
+  console.log(JSON.stringify(event));
+  console.log(context)
 
   bucketName = event.Records[0].s3.bucket.name;
   newVersionFileKey = event.Records[0].s3.object.key;
   currentVersionFileKey = event.Records[0].s3.object.key.replace(".new", ".current");
   
+  console.log("Bucket Name: " + bucketName);
+  console.log("New File Key: " + newVersionFileKey);
+  console.log("Current File Key: " + currentVersionFileKey);
+  
   s3.getObject({Bucket: bucketName, Key: newVersionFileKey}, function(err, data) {
+    console.log(err);
     if (!err) {
       const newVersionFileContents = Buffer.from(data.Body).toString('utf8');
-      s3.getObject({Bucket: bucketName, Key: currentVersionFileKey}, function(err, data2) {
-        const currentVersionFileContent = Buffer.from(data2.Body).toString('utf8');
-        if (!err) {
+      s3.getObject({Bucket: bucketName, Key: currentVersionFileKey}, function(err2, data2) {
+        console.log(err2);
+        if (!err2) {
+          const currentVersionFileContent = Buffer.from(data2.Body).toString('utf8');
       
           console.log("Parsed Body");
           
@@ -37,17 +48,23 @@ exports.handler = function(event, context, callback){
             }
           });
           
-          if(changes.length > -1)
+          if(changes.length > 0)
           {
+            console.log(changes);
+            
             var snsParameters = {
               TopicArn: "arn:aws:sns:us-east-1:866696246352:aws-mdigiacomi-testing",
               Message: JSON.stringify(changes)
             }
+            
+            console.log("Out-puttung Changes");
+            console.log(changes);
 
-            var sns = new AWS.SNS();
-            sns.publish(snsParameters, function (err, data) {
-                if (err) {
+            sns.publish(snsParameters, function (err3, data3) {
+                if (err3) {
                     console.log('error publishing to SNS');
+                    console.log(data3);
+                    console.log(err3);
                     callback(null, {
                       "statusCode": 400,
                       "isBase64Encoded": false,
@@ -59,6 +76,8 @@ exports.handler = function(event, context, callback){
                 } 
                 else {
                     console.log('message published to SNS');
+                    console.log(data3);
+                    console.log(err3);
                     callback(null, {
                       "statusCode": 200,
                       "isBase64Encoded": false,

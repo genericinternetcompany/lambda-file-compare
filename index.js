@@ -9,7 +9,12 @@ var s3 = new AWS.S3({apiVersion: '2006-03-01'});
 var sns = new AWS.SNS({apiVersion: '2010-03-31'});
 
 
-var changes = [];
+var documentUpdates = {
+  documentName: "",
+  changes: []
+};
+
+
 var bucketName = "";
 var newVersionFileKey = "";
 var newVersionFileContents = ""
@@ -18,7 +23,7 @@ var currentVersionFileContents = "";
 
 exports.handler = function(event, context, callback){
   
-  changes = [];
+  documentUpdates.changes = [];
   
   console.log(JSON.stringify(event));
   console.log(context)
@@ -26,6 +31,8 @@ exports.handler = function(event, context, callback){
   bucketName = event.Records[0].s3.bucket.name;
   newVersionFileKey = event.Records[0].s3.object.key;
   currentVersionFileKey = event.Records[0].s3.object.key.replace(".new", ".current");
+  
+  documentUpdates.documentName = newVersionFileKey.split('.')[0];
   
   console.log("Bucket Name: " + bucketName);
   console.log("New File Key: " + newVersionFileKey);
@@ -46,21 +53,21 @@ exports.handler = function(event, context, callback){
           
           diff.forEach(function(part) {
             if(part.added || part.removed) {
-              changes.push(part);
+              documentUpdates.changes.push(part);
             }
           });
           
-          if(changes.length > 0)
+          if(documentUpdates.changes.length > 0)
           {
-            console.log(changes);
+            console.log(documentUpdates);
             
             var snsParameters = {
-              TopicArn: "arn:aws:sns:us-east-1:866696246352:aws-mdigiacomi-testing",
-              Message: JSON.stringify(changes)
+              TopicArn: process.env.TopicARN,
+              Message: JSON.stringify(documentUpdates)
             }
             
             console.log("Out-puttung Changes");
-            console.log(changes);
+            console.log(documentUpdates);
 
             sns.publish(snsParameters, function (err3, data3) {
                 if (err3) {

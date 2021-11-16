@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/genericinternetcompany/lambda-file-compare#readme",
   "dependencies": {
-    "aws-sdk": "^2.575.0",
+    "aws-sdk": "^2.814.0",
     "diff": "^4.0.1"
   }
 }
